@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>เรื่องสยอง | โค้งร้อยศพ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Noto+Serif+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Prompt', 'Noto Serif Thai', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #e0d6c8;
+        }
+
+        /* พื้นหลังสยอง */
+        .horror-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 40%, #1a0a0a 0%, #050505 100%);
+            z-index: -2;
+        }
+
+        .horror-bg::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(45deg, rgba(80, 20, 20, 0.1) 0px, rgba(80, 20, 20, 0.1) 2px, transparent 2px, transparent 8px);
+            pointer-events: none;
+        }
+
+        /* overlay ตอนถามชื่อ */
+        .name-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .name-card {
+            background: linear-gradient(145deg, #1a0f0f, #0d0707);
+            border: 2px solid #8b0000;
+            border-radius: 40px;
+            padding: 40px 50px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(139,0,0,0.3);
+        }
+
+        .name-card h2 {
+            font-size: 2.5rem;
+            color: #8b0000;
+            margin-bottom: 20px;
+            font-family: 'Noto Serif Thai', serif;
+        }
+
+        .name-card p {
+            margin-bottom: 30px;
+            color: #b0a090;
+        }
+
+        .name-card input {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            border: 2px solid #8b0000;
+            border-radius: 30px;
+            background: #2a1a1a;
+            color: #ffd0b0;
+            font-family: 'Prompt', sans-serif;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .name-card input:focus {
+            outline: none;
+            border-color: #ff4500;
+            box-shadow: 0 0 20px rgba(255,0,0,0.3);
+        }
+
+        .btn-enter {
+            background: linear-gradient(145deg, #8b0000, #5a0000);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-enter:hover {
+            transform: scale(1.05);
+            background: linear-gradient(145deg, #a00000, #700000);
+            box-shadow: 0 0 30px rgba(139,0,0,0.5);
+        }
+
+        /* เนื้อหาหลัก (ซ่อนตอนแรก) */
+        .main-content {
+            display: none;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Grid layout 2 คอลัมน์ */
+        .horror-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 800px) {
+            .horror-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sidebar หมวดหมู่ */
+        .sidebar {
+            background: rgba(20, 10, 10, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 25px;
+            border: 1px solid #3a1a1a;
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            font-size: 1.8rem;
+            color: #8b0000;
+            margin-bottom: 20px;
+            border-left: 4px solid #8b0000;
+            padding-left: 15px;
+        }
+
+        .category {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: rgba(30, 15, 15, 0.8);
+            border: 1px solid #3a2a2a;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            color: #d0c0b0;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .category:hover, .category.active {
+            background: #8b0000;
+            color: white;
+            border-color: #ff6666;
+            transform: translateX(5px);
+        }
+
+        /* ส่วนขวา - เนื้อหา */
+        .content-area {
+            background: rgba(15, 8, 8, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 30px;
+            padding: 35px;
+            border: 1px solid #3a1a1a;
+        }
+
+        /* ส่วนผู้พัฒนา */
+        .developer-card {
+            background: rgba(0,0,0,0.5);
+            border-radius: 25px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid #8b0000;
+        }
+
+        .developer-card h4 {
+            color: #ff9966;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .developer-card .instagram {
+            font-size: 1.5rem;
+            color: #e1306c;
+        }
+
+        .developer-card .instagram a {
+            color: #e1306c;
+            text-decoration: none;
+        }
+
+        .bug-report {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #b0a090;
+        }
+
+        /* เรื่องสยอง */
+        .story-title {
+            font-size: 2.5rem;
+            color: #cc5533;
+            margin-bottom: 10px;
+            font-family: 'Noto Serif Thai', serif;
+        }
+
+        .story-sub {
+            color: #8b6b5a;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #3a1a1a;
+        }
+
+        .story-text {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: #e0d0c0;
+            font-family: 'Noto Serif Thai', serif;
+        }
+
+        .story-text p {
+            margin-bottom: 20px;
+            text-indent: 2em;
+        }
+
+        /* ดาวให้คะแนน */
+        .rating-section {
+            margin: 40px 0 30px;
+            padding: 25px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 25px;
+            text-align: center;
+        }
+
+        .rating-section h4 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .star {
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: #555;
+            transition: 0.2s;
+        }
+
+        .star.selected {
+            color: #ffc107;
+            text-shadow: 0 0 15px #ffaa00;
+        }
+
+        .star:hover {
+            transform: scale(1.1);
+        }
+
+        /* ช่องคอมเมนต์ */
+        .comment-section {
+            margin-top: 25px;
+        }
+
+        .comment-section textarea {
+            width: 100%;
+            padding: 18px;
+            border-radius: 25px;
+            background: #1e1414;
+            border: 2px solid #3a2a2a;
+            color: #e0d0c0;
+            font-size: 1rem;
+            font-family: 'Prompt', sans-serif;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .comment-section textarea:focus {
+            outline: none;
+            border-color: #8b0000;
+        }
+
+        .btn-send {
+            background: linear-gradient(145deg, #8b0000, #5a0000);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn-send:hover {
+            background: #aa0000;
+        }
+
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b6b5a;
+            font-size: 1.5rem;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #5a4a3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="horror-bg"></div>
+
+    <!-- ทับถามชื่อ -->
+    <div class="name-overlay" id="nameOverlay">
+        <div class="name-card">
+            <h2><i class="fas fa-ghost"></i> เรื่องสยอง</h2>
+            <p>กรุณาใส่ชื่อของคุณก่อนเข้าสู่โลกแห่งความสยอง</p>
+            <input type="text" id="userName" placeholder="ชื่อของคุณ..." autocomplete="off">
+            <button class="btn-enter" onclick="enterWebsite()">
+                <i class="fas fa-skull"></i> เข้าสู่เรื่องสยอง
+            </button>
+        </div>
+    </div>
+
+    <!-- เนื้อหาหลัก -->
+    <div class="main-content" id="mainContent">
+        <div class="horror-grid">
+            <!-- Sidebar ซ้าย -->
+            <div class="sidebar">
+                <h3><i class="fas fa-folder-open"></i> หมวดหมู่ผี</h3>
+                <button class="category active" data-cat="1">
+                    <i class="fas fa-road"></i> 1. เรื่องผีบนท้องถนน
+                </button>
+                <button class="category" data-cat="2" disabled style="opacity:0.6; cursor:not-allowed;">
+                    <i class="fas fa-home"></i> 2. เรื่องผีในบ้านตัวเอง
+                </button>
+                <button class="category" data-cat="3" disabled style="opacity:0.6; cursor:not-allowed;">
+                    <i class="fas fa-wardrobe"></i> 3. เรื่องผีในตู้เสื้อผ้า
+                </button>
+                <button class="category" data-cat="4" disabled style="opacity:0.6; cursor:not-allowed;">
+                    <i class="fas fa-building"></i> 4. เรื่องผีในหอพัก
+                </button>
+                <button class="category" data-cat="5" disabled style="opacity:0.6; cursor:not-allowed;">
+                    <i class="fas fa-tree"></i> 5. เรื่องผีในป่า
+                </button>
+            </div>
+
+            <!-- ส่วนขวา -->
+            <div class="content-area">
+                <!-- ผู้พัฒนา -->
+                <div class="developer-card">
+                    <h4><i class="fas fa-user-astronaut"></i> ผู้พัฒนา</h4>
+                    <div class="instagram">
+                        <i class="fab fa-instagram"></i> 
+                        <a href="https://instagram.com/ttttt___998on" target="_blank">ttttt___998on</a>
+                    </div>
+                    <div class="bug-report">
+                        <i class="fas fa-bug"></i> หากสงสัยหรือมีบัค แจ้งปัญหาได้นะค้าบ
+                    </div>
+                </div>
+
+                <!-- ส่วนเนื้อหาเรื่อง -->
+                <div id="storyContainer">
+                    <!-- เรื่องที่ 1 (กำลังแสดง) -->
+                    <div id="story1">
+                        <div class="story-title">โค้งร้อยศพกับ ‘ผู้ขออาศัย’</div>
+                        <div class="story-sub"><i class="fas fa-moon"></i> เรื่องที่ 1 | โค้งศาลเพียงตา</div>
+                        <div class="story-text">
+                            <p>บนทางหลวงสายเก่าที่ตัดผ่านป่าทึบในจังหวัดแถบภาคเหนือ มีทางโค้งหักศอกอยู่แห่งหนึ่งที่ชาวบ้านเรียกกันว่า "โค้งศาลเพียงตา" ที่นี่ไม่มีไฟกิ่ง และสัญญาณโทรศัพท์มักจะขาดหายไปดื้อๆ ทุกครั้งที่ขับผ่าน</p>
+                            <p>คืนนั้น "เอก" กำลังขับรถกระบะกลับบ้านคนเดียวกลางดึก ท่ามกลางสายฝนที่โปรยปรายจนทัศนวิสัยพร่าเลือน ขณะที่เขากำลังจะเข้าโค้งนั้น แสงไฟหน้ารถก็สาดไปกระทบกับร่างของหญิงสาวคนหนึ่งในชุดสีขาวหม่น เธอยืนนิ่งอยู่ข้างศาลเพียงตาที่พังทลาย มือข้างหนึ่งยกขึ้นคล้ายกำลังกวักเรียก</p>
+                            <p>เอกไม่ได้จอด เพราะความกลัวแล่นปราดเข้าจับหัวใจ เขาเหยียบคันเร่งหนีทันที แต่พอพ้นโค้งมาได้ไม่ไกล เขาก็มองไปที่ "กระจกหลัง"...</p>
+                            <p><strong>ความสยองที่ขยับเข้าใกล้</strong><br>ในกระจกหลังที่ควรจะมีแต่ความมืด เอกเห็นร่างนั้น "วิ่ง" ตามรถมาด้วยท่าทางที่ผิดมนุษย์ เธอไม่ได้วิ่งแบบคนทั่วไป แต่เธอกระโดดตะครุบพื้นเหมือนสัตว์ป่า และที่น่าสยดสยองที่สุดคือ ทุกครั้งที่เธอกระโดด ระยะห่างระหว่างเธอกับท้ายรถจะลดลงอย่างรวดเร็ว</p>
+                            <p>เขารีบเร่งความเร็วไปที่ 120 กม./ชม. เสียงเครื่องยนต์ครางกระหึ่ม แต่พอมองกระจกอีกครั้ง... ร่างนั้นหายไปแล้ว</p>
+                            <p>เอกถอนหายใจยาว พยายามบอกตัวเองว่าตาฝาด แต่แล้วเขาก็รู้สึกถึงแรงสั่นสะเทือนบางอย่างที่ "หลังคารถ"</p>
+                            <p><strong>ตึ้ง! ตึ้ง! ตึ้ง!</strong><br>เสียงเหมือนมีใครบางคนกำลังใช้ของแข็งทุบลงบนหลังคาอย่างบ้าคลั่ง รถเริ่มส่ายไปมา เอกพยายามประคองพวงมาลัยพลางเหลือบมองไปที่กระจกมองหลังอีกรอบ คราวนี้สิ่งที่เขาเห็นทำให้เลือดในกายเย็นเฉียบ...</p>
+                            <p><strong>จุดจบที่ไม่มีทางหนี</strong><br>มีใบหน้าขาวซีดที่ไร้ดวงตา ค่อยๆ ห้อยหัวลงมาจากขอบหลังคารถ ผ่านกระจกหน้าลงมาจ้องหน้าเขาโดยตรง ปากที่ฉีกถึงใบหูขยับพึมพำช้าๆ ว่า...</p>
+                            <p style="font-size:1.5rem; text-align:center; color:#cc5533;">"ขอ... ไป... ด้วย... คน..."</p>
+                            <p>เอกตกใจสุดขีดจนเหยียบเบรกมิดล้อ รถเสียหลักหมุนคว้างก่อนจะพุ่งตกเหวข้างทาง...</p>
+                            <p>เช้าวันต่อมา กู้ภัยพบซากรถของเอก สิ่งที่น่าแปลกคือ ร่างของเอกไม่ได้เสียชีวิตจากแรงกระแทก แต่สภาพศพของเขาคือ หัวใจล้มเหลวเฉียบพลัน และบนหลังคารถที่บี้แบนนั้น มี "รอยเท้าคน" ขนาดเล็กย่ำจนหลังคาบุบเป็นทางยาว... ราวกับมีใครบางคนกระโดดลงจากรถไปอย่างใจเย็นหลังจากที่งานของมันเสร็จสิ้นลงแล้ว</p>
+                        </div>
+
+                        <!-- ดาวให้คะแนน -->
+                        <div class="rating-section">
+                            <h4><i class="fas fa-star"></i> ให้คะแนนความสยอง</h4>
+                            <div class="stars" id="starRating">
+                                <i class="far fa-star star" data-value="1"></i>
+                                <i class="far fa-star star" data-value="2"></i>
+                                <i class="far fa-star star" data-value="3"></i>
+                                <i class="far fa-star star" data-value="4"></i>
+                                <i class="far fa-star star" data-value="5"></i>
+                            </div>
+                            <div id="ratingValue" style="margin-top: 10px; color:#ffaa66;"></div>
+                        </div>
+
+                        <!-- ช่องคอมเมนต์ -->
+                        <div class="comment-section">
+                            <h4><i class="fas fa-comment-dots"></i> คอมเม้นหน่อยยย</h4>
+                            <textarea id="userComment" rows="4" placeholder="แสดงความคิดเห็นของคุณที่นี่..."></textarea>
+                            <button class="btn-send" onclick="sendToEmail()">
+                                <i class="fas fa-paper-plane"></i> กดส่ง
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- เรื่อง 2 (กำลังพัฒนา) -->
+                    <div id="story2" style="display: none;">
+                        <div class="coming-soon">
+                            <i class="fas fa-skull" style="font-size: 4rem;"></i>
+                            <h2>เรื่องที่ 2 กำลังพัฒนา...</h2>
+                            <p>เร็วๆ นี้พบกับเรื่องสยองใหม่ที่น่ากลัวยิ่งกว่า!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-note">
+                    <i class="fas fa-ghost"></i> ระวัง... ผีอาจจะอยู่ใกล้คุณ
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+        let userName = "";
+        let currentStory = 1;
+
+        // ดาวให้คะแนน
+        function initStars() {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = parseInt(this.dataset.value);
+                    currentRating = value;
+                    updateStars(value);
+                    document.getElementById('ratingValue').innerHTML = `<i class="fas fa-heart" style="color:#ff6666;"></i> คุณให้คะแนน ${value} ดาว`;
+                });
+            });
+        }
+
+        function updateStars(rating) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.className = 'fas fa-star star selected';
+                } else {
+                    star.className = 'far fa-star star';
+                }
+            });
+        }
+
+        // เข้าเว็บ
+        function enterWebsite() {
+            const nameInput = document.getElementById('userName');
+            userName = nameInput.value.trim();
+            if (userName === "") {
+                alert("กรุณาใส่ชื่อของคุณก่อนนะครับ");
+                return;
+            }
+            localStorage.setItem('horrorUserName', userName);
+            document.getElementById('nameOverlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('nameOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                initStars();
+            }, 500);
+        }
+
+        // เปลี่ยนหมวดหมู่
+        document.querySelectorAll('.category').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.disabled) return;
+                document.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+                const catId = parseInt(this.dataset.cat);
+                if (catId === 1) {
+                    document.getElementById('story1').style.display = 'block';
+                    document.getElementById('story2').style.display = 'none';
+                    currentStory = 1;
+                    // reset คะแนนและคอมเมนต์
+                    currentRating = 0;
+                    updateStars(0);
+                    document.getElementById('ratingValue').innerHTML = '';
+                    document.getElementById('userComment').value = '';
+                } else if (catId === 2) {
+                    // เรื่อง 2 กำลังพัฒนา
+                }
+            });
+        });
+
+        // ส่งข้อมูลไป Gmail (เปิด mailto)
+        function sendToEmail() {
+            const comment = document.getElementById('userComment').value.trim();
+            const ratingText = currentRating > 0 ? `${currentRating} ดาว` : "ยังไม่ให้คะแนน";
+            const storyTitle = currentStory === 1 ? "โค้งร้อยศพกับ 'ผู้ขออาศัย'" : "เรื่องที่ 2 (กำลังพัฒนา)";
+            
+            const subject = `[เรื่องสยอง] ${userName} ส่งความคิดเห็น`;
+            const body = `
+═══════════════════════════════
+📖 เรื่องสยอง - โค้งร้อยศพ
+═══════════════════════════════
+
+👤 ชื่อผู้อ่าน: ${userName}
+⭐ คะแนนความสยอง: ${ratingText}
+📝 เรื่องที่อ่าน: ${storyTitle}
+💬 ความคิดเห็น: ${comment || "ไม่มีความคิดเห็น"}
+
+───────────────────────────────
+ส่งจากเว็บ เรื่องสยอง
+หากมีบัคแจ้งที่ Instagram: ttttt___998on
+═══════════════════════════════
+            `.trim();
+
+            const mailtoLink = `mailto:mlllsdjsmsms@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoLink;
+        }
+
+        // ตรวจสอบชื่อที่เคยใส่
+        const savedName = localStorage.getItem('horrorUserName');
+        if (savedName) {
+            document.getElementById('userName').value = savedName;
+        }
+
+        // ปรับปรุง stars (รองรับมือถือ)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('nameOverlay').style.display !== 'none') {
+                // รอให้โหลด
+            }
+        });
+    </script>
+</body>
+</html>
